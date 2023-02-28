@@ -30,7 +30,7 @@ Backend
 
 Frontend
 ----------
-> Source-based from Filscan-front (Vue.js): https://github.com/Filscan-Team/filscan-frontend
+> Source-based from Filscan-frontend (Vue.js): https://github.com/Filscan-Team/filscan-frontend
 
 
 Run
@@ -41,9 +41,9 @@ Python
 ---------------------------------
 $ sudo apt-get install wget python3 python3-pip
 
-$ sudo apt-get install mysql
+$ sudo apt-get install mysql-server
 or
-$ sudo apt-get install mariadb
+$ sudo apt-get install mariadb-server
 
 
 
@@ -158,5 +158,5 @@ Screenshots
 ----------
 
 > Ethereum Block Explorer </br>
-<img src="https://github.com/godmode2k/eth_block_explorer/raw/main/screenshot.png" width="40%" height="40%">
+<img src="https://github.com/godmode2k/eth_block_explorer/raw/main/screenshot.png" width="50%" height="50%">
 
