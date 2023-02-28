@@ -262,7 +262,7 @@ export default {
 <script>
 import mixin from "./mixin";
 import { getTransactionsByAddress } from "@/api/home"
-import { getBalancesByAddress } from "@/api/home"
+//import { getBalancesByAddress } from "@/api/home"
 //! TODO: get balances by address
 // - each tokens, total balances, contract address, ...
 
