@@ -1,0 +1,1734 @@
+/* --------------------------------------------------------------
+Project:    Ethereum auto-transfer (accounts to specific address(hotwallet))
+Purpose:
+Author:     Ho-Jung Kim (godmode2k@hotmail.com)
+Date:       Since Dec 4, 2020
+Filename:   rpc_server.go
+
+Last modified:  April 17, 2022
+License:
+
+*
+* Copyright (C) 2020 Ho-Jung Kim (godmode2k@hotmail.com)
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*      http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*
+-----------------------------------------------------------------
+Note:
+-----------------------------------------------------------------
+Reference:
+ - https://golang.org/pkg/net/rpc/
+ - https://pkg.go.dev/database/sql
+ - https://pkg.go.dev/github.com/mattn/go-sqlite3
+
+Dependencies:
+ - $ go get -u github.com/go-sql-driver/mysql
+ - $ go get github.com/mattn/go-sqlite3
+-------------------------------------------------------------- */
+package rpc_server
+
+
+
+//! Header
+// ---------------------------------------------------------------
+
+import (
+    "fmt"
+    "log"
+    //"math/big"
+    "encoding/json"
+
+    "runtime"
+    "regexp"
+
+    // HTTP JSON-RPC Server
+    "net/http"
+    //"github.com/gorilla/mux"
+    //"github.com/gorilla/rpc"
+    //"github.com/gorilla/rpc/json"
+
+    // $ go get -u github.com/go-sql-driver/mysql
+    "database/sql"
+    _ "github.com/go-sql-driver/mysql"
+    _ "github.com/mattn/go-sqlite3"
+
+    // eth_txns_fetcher
+    "eth_block_explorer/types"
+)
+
+
+
+//! Definition
+// --------------------------------------------------------------------
+
+//var DB_SERVER_ADDRESS = "127.0.0.1:3306"
+//var DB_NAME = "ethereum_block_explorer"
+//var DB_LOGIN_USERNAME = "root"
+//var DB_LOGIN_PASSWORD = "mysql"
+var _E_TYPE__ALL = uint8(0)
+var _E_TYPE__ETH = uint8(1)
+var _E_TYPE__ERC20 = uint8(2)
+var _E_TYPE__ERC1155 = uint8(3)
+
+var TABLE_NAME__TXID_ALL = "txid"
+var TABLE_NAME__ETH_ERC20 = "txid_eth_erc20"
+var TABLE_NAME__ERC1155 = "txid_erc1155"
+var TABLE_NAME__BLOCKS = "blocks"
+var TABLE_NAME__BALANCES_ALL = "balances"
+var TOKEN_TYPE_ETHER = "ether"
+var TOKEN_TYPE_ERC20 = "erc20"
+var TOKEN_TYPE_ERC1155 = "erc1155"
+
+var DB_MEMORY_TABLE_NAME__TXID_ALL = "memory_txid"
+var DB_MEMORY_TABLE_NAME__BLOCKS_INFO = "memory_blocks"
+
+
+
+//! Implementation
+// --------------------------------------------------------------------
+
+type LocalDB struct {
+    Db *sql.DB
+    DbMemory *sql.DB
+}
+
+
+
+func (t *LocalDB) _query_raw(query_str string) *sql.Rows {
+    fmt.Println( "query = ", query_str )
+
+    result, err := t.Db.Query( query_str )
+
+    if err != nil {
+        panic( err.Error() )
+    }
+
+    //fmt.Println( "result = ", result )
+
+    return result
+}
+
+func (t *LocalDB) _query(_type uint8, query_str string) []types.Fetch_transactions_st {
+    var result []types.Fetch_transactions_st
+
+    //rows, err := t.Db.Query("select id, name from foo limit 1")
+    //rows, err := t.Db.Query( query )
+    //if err != nil {
+    //    log.Fatal(err)
+    //}
+
+    //fmt.Println( "Query = ", query_str )
+    //rows *sql.Rows
+    rows, err := t.Db.Query( query_str )
+
+    if err != nil {
+        //log.Fatal( err.Error() )
+        panic( err.Error() )
+    }
+    defer rows.Close()
+
+
+    /*
+    if ( _type == _E_TYPE__ETH ) {
+        for rows.Next() {
+            var Index sql.NullInt64
+            //var Symbol string
+            var From_address string
+            var To_address string
+            var Is_send string
+            var Amount_wei string
+            var Amount_eth string
+            var Token_type string
+            var Token_symbol string
+            var Token_decimals string
+            var Token_total_supply string
+            var Token_contract_address string
+            var Token_amount_wei string
+            var Token_amount_eth string
+            // for SQL: txid_erc1155 table
+            //var Token_amount string
+            //var Token_uri_ascii string
+            //var Token_uri_hexadecimal string
+            //var Token_data_length string
+            //var Token_data string
+            var Timestamp string
+            var Datetime string
+            var Block_number string
+            var Txid string
+
+            err := rows.Scan(
+                &Index,
+                //&Symbol,
+                &From_address,
+                &To_address,
+                &Is_send,
+                &Amount_wei,
+                &Amount_eth,
+                &Token_type,
+                &Token_symbol,
+                &Token_decimals,
+                &Token_total_supply,
+                &Token_contract_address,
+                &Token_amount_wei,
+                &Token_amount_eth,
+                // for SQL: txid_erc1155 table
+                //&Token_amount,
+                //&Token_uri_ascii,
+                //&Token_uri_hexadecimal,
+                //&Token_data_length,
+                //&Token_data,
+                &Timestamp,
+                &Datetime,
+                &Block_number,
+                &Txid,
+            )
+
+            if err != nil {
+                //log.Fatal(err)
+                panic( err )
+            }
+
+            _data := types.Fetch_transactions_st {
+                //Symbol: Symbol,
+                From_address: From_address,
+                To_address: To_address,
+                Is_send: Is_send,
+                Amount_wei: Amount_wei,
+                Amount_eth: Amount_eth,
+                Token_type: Token_type,
+                Token_symbol: Token_symbol,
+                Token_decimals: Token_decimals,
+                Token_total_supply: Token_total_supply,
+                Token_contract_address: Token_contract_address,
+                Token_amount_wei: Token_amount_wei,
+                Token_amount_eth: Token_amount_eth,
+                // for SQL: txid_erc1155 table
+                //Token_amount: Token_amount,
+                //Token_uri_ascii: Token_uri_ascii,
+                //Token_uri_hexadecimal: Token_uri_hexadecimal,
+                //Token_data_length: Token_data_length,
+                //Token_data: Token_data,
+                Timestamp: Timestamp,
+                Datetime: Datetime,
+                Block_number: Block_number,
+                Txid: Txid,
+            }
+
+            result = append( result, _data )
+        } // for ()
+    } else if ( _type == _E_TYPE__ERC20 ) {
+        for rows.Next() {
+            var Index sql.NullInt64
+            //var Symbol string
+            var From_address string
+            var To_address string
+            var Is_send string
+            var Amount_wei string
+            var Amount_eth string
+            var Token_type string
+            var Token_symbol string
+            var Token_decimals string
+            var Token_total_supply string
+            var Token_contract_address string
+            var Token_amount_wei string
+            var Token_amount_eth string
+            // for SQL: txid_erc1155 table
+            //var Token_amount string
+            //var Token_uri_ascii string
+            //var Token_uri_hexadecimal string
+            //var Token_data_length string
+            //var Token_data string
+            var Timestamp string
+            var Datetime string
+            var Block_number string
+            var Txid string
+
+            err := rows.Scan(
+                &Index,
+                //&Symbol,
+                &From_address,
+                &To_address,
+                &Is_send,
+                &Amount_wei,
+                &Amount_eth,
+                &Token_type,
+                &Token_symbol,
+                &Token_decimals,
+                &Token_total_supply,
+                &Token_contract_address,
+                &Token_amount_wei,
+                &Token_amount_eth,
+                // for SQL: txid_erc1155 table
+                //&Token_amount,
+                //&Token_uri_ascii,
+                //&Token_uri_hexadecimal,
+                //&Token_data_length,
+                //&Token_data,
+                &Timestamp,
+                &Datetime,
+                &Block_number,
+                &Txid,
+            )
+
+            if err != nil {
+                //log.Fatal(err)
+                panic( err )
+            }
+
+            _data := types.Fetch_transactions_st {
+                //Symbol: Symbol,
+                From_address: From_address,
+                To_address: To_address,
+                Is_send: Is_send,
+                Amount_wei: Amount_wei,
+                Amount_eth: Amount_eth,
+                Token_type: Token_type,
+                Token_symbol: Token_symbol,
+                Token_decimals: Token_decimals,
+                Token_total_supply: Token_total_supply,
+                Token_contract_address: Token_contract_address,
+                Token_amount_wei: Token_amount_wei,
+                Token_amount_eth: Token_amount_eth,
+                // for SQL: txid table
+                //Token_amount: Token_amount,
+                //Token_uri_ascii: Token_uri_ascii,
+                //Token_uri_hexadecimal: Token_uri_hexadecimal,
+                //Token_data_length: Token_data_length,
+                //Token_data: Token_data,
+                Timestamp: Timestamp,
+                Datetime: Datetime,
+                Block_number: Block_number,
+                Txid: Txid,
+            }
+
+            result = append( result, _data )
+        } // for ()
+    } else if ( _type == _E_TYPE__ERC1155 ) {
+        for rows.Next() {
+            var Index sql.NullInt64
+            //var Symbol string
+            var From_address string
+            var To_address string
+            var Is_send string
+            // for SQL: txid table
+            //var Amount_wei string
+            //var Amount_eth string
+            var Token_type string
+            var Token_symbol string
+            var Token_decimals string
+            // for SQL: txid table
+            //var Token_total_supply string
+            var Token_contract_address string
+            // for SQL: txid table
+            //var Token_amount_wei string
+            //var Token_amount_eth string
+            var Token_amount string
+            var Token_uri_ascii string
+            var Token_uri_hexadecimal string
+            var Token_data_length string
+            var Token_data string
+            var Timestamp string
+            var Datetime string
+            var Block_number string
+            var Txid string
+
+            err := rows.Scan(
+                &Index,
+                //&Symbol,
+                &From_address,
+                &To_address,
+                &Is_send,
+                // for SQL: txid table
+                //&Amount_wei,
+                //&Amount_eth,
+                &Token_type,
+                &Token_symbol,
+                &Token_decimals,
+                // for SQL: txid table
+                //&Token_total_supply,
+                &Token_contract_address,
+                // for SQL: txid table
+                //&Token_amount_wei,
+                //&Token_amount_eth,
+                &Token_amount,
+                &Token_uri_ascii,
+                &Token_uri_hexadecimal,
+                &Token_data_length,
+                &Token_data,
+                &Timestamp,
+                &Datetime,
+                &Block_number,
+                &Txid,
+            )
+
+            if err != nil {
+                //log.Fatal(err)
+                panic( err )
+            }
+
+            _data := types.Fetch_transactions_st {
+                //Symbol: Symbol,
+                From_address: From_address,
+                To_address: To_address,
+                Is_send: Is_send,
+                // for SQL: txid_erc1155 table
+                //Amount_wei: Amount_wei,
+                //Amount_eth: Amount_eth,
+                Token_type: Token_type,
+                Token_symbol: Token_symbol,
+                // for SQL: txid table
+                //Token_decimals: Token_decimals,
+                //Token_total_supply: Token_total_supply,
+                Token_contract_address: Token_contract_address,
+                // for SQL: txid table
+                //Token_amount_wei: Token_amount_wei,
+                //Token_amount_eth: Token_amount_eth,
+                Token_amount: Token_amount,
+                Token_uri_ascii: Token_uri_ascii,
+                Token_uri_hexadecimal: Token_uri_hexadecimal,
+                Token_data_length: Token_data_length,
+                Token_data: Token_data,
+                Timestamp: Timestamp,
+                Datetime: Datetime,
+                Block_number: Block_number,
+                Txid: Txid,
+            }
+
+            result = append( result, _data )
+        } // for ()
+    } else {
+        //result = types.Fetch_transactions_st {}
+
+        for rows.Next() {
+            var Index sql.NullInt64
+            //var Symbol string
+            var From_address string
+            var To_address string
+            var Is_send string
+            var Amount_wei string
+            var Amount_eth string
+            var Token_type string
+            var Token_symbol string
+            var Token_decimals string
+            var Token_total_supply string
+            var Token_contract_address string
+            var Token_amount_wei string
+            var Token_amount_eth string
+            var Token_amount string
+            var Token_uri_ascii string
+            var Token_uri_hexadecimal string
+            var Token_data_length string
+            var Token_data string
+            var Timestamp string
+            var Datetime string
+            var Block_number string
+            var Txid string
+
+            err := rows.Scan(
+                &Index,
+                //&Symbol,
+                &From_address,
+                &To_address,
+                &Is_send,
+                &Amount_wei,
+                &Amount_eth,
+                &Token_type,
+                &Token_symbol,
+                &Token_decimals,
+                &Token_total_supply,
+                &Token_contract_address,
+                &Token_amount_wei,
+                &Token_amount_eth,
+                &Token_amount,
+                &Token_uri_ascii,
+                &Token_uri_hexadecimal,
+                &Token_data_length,
+                &Token_data,
+                &Timestamp,
+                &Datetime,
+                &Block_number,
+                &Txid,
+            )
+
+            if err != nil {
+                //log.Fatal(err)
+                panic( err )
+            }
+
+            _data := types.Fetch_transactions_st {
+                //Symbol: Symbol,
+                From_address: From_address,
+                To_address: To_address,
+                Is_send: Is_send,
+                Amount_wei: Amount_wei,
+                Amount_eth: Amount_eth,
+                Token_type: Token_type,
+                Token_symbol: Token_symbol,
+                Token_decimals: Token_decimals,
+                Token_total_supply: Token_total_supply,
+                Token_contract_address: Token_contract_address,
+                Token_amount_wei: Token_amount_wei,
+                Token_amount_eth: Token_amount_eth,
+                Token_amount: Token_amount,
+                Token_uri_ascii: Token_uri_ascii,
+                Token_uri_hexadecimal: Token_uri_hexadecimal,
+                Token_data_length: Token_data_length,
+                Token_data: Token_data,
+                Timestamp: Timestamp,
+                Datetime: Datetime,
+                Block_number: Block_number,
+                Txid: Txid,
+            }
+
+            result = append( result, _data )
+        } // for ()
+    }
+    */
+
+
+    if ( _type == _E_TYPE__ALL ) {
+        //result = types.Fetch_transactions_st {}
+
+        for rows.Next() {
+            var Index sql.NullInt64
+            //var Symbol string
+            var From_address string
+            var To_address string
+            //var Is_send string
+            var Amount_wei string
+            var Amount_eth string
+            var Token_type string
+            var Token_symbol string
+            var Token_decimals string
+            var Token_total_supply string
+            var Token_contract_address string
+            var Token_amount_wei string
+            var Token_amount_eth string
+            var Token_amount string
+            var Token_uri_ascii string
+            var Token_uri_hexadecimal string
+            var Token_data_length string
+            var Token_data string
+            var Timestamp string
+            var Datetime string
+            var Block_number string
+            var Txid string
+
+            err := rows.Scan(
+                &Index,
+                //&Symbol,
+                &From_address,
+                &To_address,
+                //&Is_send,
+                &Amount_wei,
+                &Amount_eth,
+                &Token_type,
+                &Token_symbol,
+                &Token_decimals,
+                &Token_total_supply,
+                &Token_contract_address,
+                &Token_amount_wei,
+                &Token_amount_eth,
+                &Token_amount,
+                &Token_uri_ascii,
+                &Token_uri_hexadecimal,
+                &Token_data_length,
+                &Token_data,
+                &Timestamp,
+                &Datetime,
+                &Block_number,
+                &Txid,
+            )
+
+            if err != nil {
+                //log.Fatal(err)
+                panic( err )
+            }
+
+            _data := types.Fetch_transactions_st {
+                //Symbol: Symbol,
+                From_address: From_address,
+                To_address: To_address,
+                //Is_send: Is_send,
+                Amount_wei: Amount_wei,
+                Amount_eth: Amount_eth,
+                Token_type: Token_type,
+                Token_symbol: Token_symbol,
+                Token_decimals: Token_decimals,
+                Token_total_supply: Token_total_supply,
+                Token_contract_address: Token_contract_address,
+                Token_amount_wei: Token_amount_wei,
+                Token_amount_eth: Token_amount_eth,
+                Token_amount: Token_amount,
+                Token_uri_ascii: Token_uri_ascii,
+                Token_uri_hexadecimal: Token_uri_hexadecimal,
+                Token_data_length: Token_data_length,
+                Token_data: Token_data,
+                Timestamp: Timestamp,
+                Datetime: Datetime,
+                Block_number: Block_number,
+                Txid: Txid,
+            }
+
+            result = append( result, _data )
+        } // for ()
+    }
+
+    return result
+}
+
+func (t *LocalDB) _query_blocks(query_str string) []types.Fetch_blocks_info_st {
+    var result []types.Fetch_blocks_info_st
+
+    //fmt.Println( "Query = ", query_str )
+    //rows *sql.Rows
+    rows, err := t.Db.Query( query_str )
+
+    if err != nil {
+        //log.Fatal( err.Error() )
+        panic( err.Error() )
+    }
+    defer rows.Close()
+
+
+    for rows.Next() {
+        var Index sql.NullInt64
+        var Blocks string
+        var Blocks_hash string
+        var Info string
+        var Transactions uint
+
+        err := rows.Scan(
+            &Index,
+            &Blocks,
+            &Blocks_hash,
+            &Info,
+            &Transactions,
+        )
+
+        if err != nil {
+            //log.Fatal(err)
+            panic( err )
+        }
+
+        _data := types.Fetch_blocks_info_st {
+            Block_number: Blocks,
+            Block_hash: Blocks_hash,
+            Info: Info,
+            Transactions: fmt.Sprintf("%d", Transactions),
+        }
+
+        result = append( result, _data )
+    } // for ()
+
+    return result
+}
+
+//! TODO
+func (t *LocalDB) _query_balances(query_str string) []types.Fetch_balances_st {
+    var result []types.Fetch_balances_st
+
+    return result
+}
+
+
+
+/*
+func (t *LocalDB) _query_memory(query_str string) []types.Fetch_transactions_st {
+    var result []types.Fetch_transactions_st
+
+    //rows, err := t.Db.Query("select id, name from foo limit 1")
+    //rows, err := t.Db.Query( query )
+    //if err != nil {
+    //    log.Fatal(err)
+    //}
+
+    fmt.Println( "Query = ", query_str )
+
+    if t.DbMemory == nil {
+        fmt.Println( "SQLite: connection lost" )
+        return nil
+    }
+
+    if len(query_str) <= 0 {
+        fmt.Println( "SQLite: query is empty" )
+        return nil
+    }
+
+
+    //rows *sql.Rows
+    //rows, err := t.DbMemory.Query("select id, name from foo limit 1")
+    rows, err := t.DbMemory.Query( query_str )
+    if err != nil {
+        //log.Fatal(err)
+        panic( err.Error() )
+    }
+    defer rows.Close()
+
+
+
+//    for rows.Next() {
+//        var id int
+//        var name string
+//        err = rows.Scan(&id, &name)
+//
+//        if err != nil {
+//            log.Fatal(err)
+//        }
+//        fmt.Println(id, name)
+//
+//        result = fmt.Sprintf( "id = %d, name = %s", id, name )
+//    }
+//
+//    err = rows.Err()
+//    if err != nil {
+//        log.Fatal(err)
+//    }
+
+
+    return result
+}
+*/
+
+
+/*
+func (t *LocalDB) Test_localdb(query string, response *string) error {
+    if t.Db == nil {
+        fmt.Println( "LocalDB: connection lost" )
+        return nil
+    }
+
+    if len(query) <= 0 {
+        fmt.Println( "LocalDB: query is empty" )
+        return nil
+    }
+
+    var result string
+
+    //rows, err := t.Db.Query("select id, name from foo limit 1")
+    rows, err := t.Db.Query( query )
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer rows.Close()
+    for rows.Next() {
+        var id int
+        var name string
+        err = rows.Scan(&id, &name)
+        if err != nil {
+            log.Fatal(err)
+        }
+        fmt.Println(id, name)
+
+        result = fmt.Sprintf( "id = %d, name = %s", id, name )
+    }
+    err = rows.Err()
+    if err != nil {
+        log.Fatal(err)
+    }
+
+
+    *response = result
+
+    return nil
+}
+*/
+
+
+
+func (t *LocalDB) Db_select_txns_all_mixed(request_page uint, response *[]types.Fetch_transactions_st) error {
+    //if ( request_page < 1 ) {
+    //    fmt.Println( "request page < 1" )
+    //    return nil
+    //}
+
+    // limit: 30 transactions per page
+    LIMIT_PER_PAGE := uint(30)
+    //REQ_ROWS := (LIMIT_PER_PAGE * request_page)
+    OFFSET := (LIMIT_PER_PAGE * request_page)
+
+    //query_str := fmt.Sprintf(
+    //    "SELECT t.* FROM ((SELECT * FROM %s LIMIT %d,%d) UNION (SELECT * FROM %s LIMIT %d,%d))t ORDER BY timestamp DESC",
+    //    TABLE_NAME__ETH_ERC20, OFFSET, LIMIT_PER_PAGE,
+    //    TABLE_NAME__ERC1155, OFFSET, LIMIT_PER_PAGE,
+    //)
+
+    query_str := fmt.Sprintf(
+        "SELECT * FROM %s ORDER BY timestamp DESC LIMIT %d,%d",
+        TABLE_NAME__TXID_ALL, OFFSET, LIMIT_PER_PAGE,
+    )
+
+
+    *response = t._query( _E_TYPE__ALL, query_str )
+
+    return nil
+}
+
+func (t *LocalDB) Db_select_txns_all_erc(request_page uint, response *[]types.Fetch_transactions_st) error {
+    // limit: 30 transactions per page
+    LIMIT_PER_PAGE := uint(30)
+    //REQ_ROWS := (LIMIT_PER_PAGE * request_page)
+    OFFSET := (LIMIT_PER_PAGE * request_page)
+
+    //query_str := fmt.Sprintf(
+    //    "SELECT t.* FROM ((SELECT * FROM %s WHERE token_type='%s' LIMIT %d,%d) UNION (SELECT * FROM %s LIMIT %d,%d))t ORDER BY timestamp DESC",
+    //    TABLE_NAME__ETH_ERC20, TOKEN_TYPE_ERC20, OFFSET, LIMIT_PER_PAGE,
+    //    TABLE_NAME__ERC1155, OFFSET, LIMIT_PER_PAGE,
+    //)
+
+    query_str := fmt.Sprintf(
+        "SELECT * FROM %s WHERE token_type='%s' or token_type='%s' ORDER BY timestamp DESC LIMIT %d,%d",
+        TABLE_NAME__TXID_ALL, TOKEN_TYPE_ERC20, TOKEN_TYPE_ERC1155, OFFSET, LIMIT_PER_PAGE,
+    )
+
+
+    *response = t._query( _E_TYPE__ALL, query_str )
+
+    return nil
+}
+
+func (t *LocalDB) Db_select_txns_erc20(request_page uint, response *[]types.Fetch_transactions_st) error {
+    // limit: 30 transactions per page
+    LIMIT_PER_PAGE := uint(30)
+    //REQ_ROWS := (LIMIT_PER_PAGE * request_page)
+    OFFSET := (LIMIT_PER_PAGE * request_page)
+
+    //query_str := fmt.Sprintf(
+    //    "SELECT * FROM %s WHERE token_type = '%s' ORDER BY timestamp DESC LIMIT %d,%d",
+    //    TABLE_NAME__ETH_ERC20, OFFSET, LIMIT_PER_PAGE, TOKEN_TYPE_ERC20,
+    //)
+    //*response = t._query( _E_TYPE__ERC20, query_str )
+
+    query_str := fmt.Sprintf(
+        "SELECT * FROM %s WHERE token_type = '%s' ORDER BY timestamp DESC LIMIT %d,%d",
+        TABLE_NAME__TXID_ALL, TOKEN_TYPE_ERC20, OFFSET, LIMIT_PER_PAGE,
+    )
+
+
+    *response = t._query( _E_TYPE__ALL, query_str )
+
+    return nil
+}
+
+func (t *LocalDB) Db_select_txns_erc1155(request_page uint, response *[]types.Fetch_transactions_st) error {
+    // limit: 30 transactions per page
+    LIMIT_PER_PAGE := uint(30)
+    //REQ_ROWS := (LIMIT_PER_PAGE * request_page)
+    OFFSET := (LIMIT_PER_PAGE * request_page)
+
+    //query_str := fmt.Sprintf(
+    //    "SELECT * FROM %s ORDER BY timestamp DESC LIMIT %d,%d",
+    //    TABLE_NAME__ERC1155, OFFSET, LIMIT_PER_PAGE,
+    //)
+    //*response = t._query( _E_TYPE__ERC1155, query_str )
+
+    query_str := fmt.Sprintf(
+        "SELECT * FROM %s WHERE token_type = '%s' ORDER BY timestamp DESC LIMIT %d,%d",
+        TABLE_NAME__TXID_ALL, TOKEN_TYPE_ERC1155, OFFSET, LIMIT_PER_PAGE,
+    )
+
+
+    *response = t._query( _E_TYPE__ALL, query_str )
+
+    return nil
+}
+
+func (t *LocalDB) Db_select_blocks_info(request_page uint, response *[]types.Fetch_blocks_info_st) error {
+    //if ( request_page < 1 ) {
+    //    fmt.Println( "request page < 1" )
+    //    return nil
+    //}
+
+    // limit: 30 transactions per page
+    LIMIT_PER_PAGE := uint(30)
+    //REQ_ROWS := (LIMIT_PER_PAGE * request_page)
+    OFFSET := (LIMIT_PER_PAGE * request_page)
+
+    query_str := fmt.Sprintf(
+        //"SELECT * FROM %s ORDER BY blocks DESC LIMIT %d,%d",
+
+        //! FIXME
+        //"SELECT * FROM %s ORDER BY CAST(blocks as unsigned) DESC LIMIT %d,%d",
+        "SELECT * FROM %s ORDER BY blocks+0 DESC LIMIT %d,%d",
+        TABLE_NAME__BLOCKS, OFFSET, LIMIT_PER_PAGE,
+    )
+
+
+    *response = t._query_blocks( query_str )
+
+    return nil
+}
+
+func (t *LocalDB) Db_select_block_by_number(block string, response *[]types.Fetch_blocks_info_st) error {
+    //if ( request_page < 1 ) {
+    //    fmt.Println( "request page < 1" )
+    //    return nil
+    //}
+
+    // limit: 30 transactions per page
+    //LIMIT_PER_PAGE := uint(30)
+    //REQ_ROWS := (LIMIT_PER_PAGE * request_page)
+    //OFFSET := (LIMIT_PER_PAGE * request_page)
+
+    query_str := fmt.Sprintf(
+        //"SELECT * FROM %s ORDER BY blocks DESC LIMIT %d,%d",
+
+        "SELECT * FROM %s WHERE blocks = '%s'",
+        TABLE_NAME__BLOCKS, block,
+    )
+
+
+    *response = t._query_blocks( query_str )
+
+    return nil
+}
+
+func (t *LocalDB) Db_select_txns_all_mixed_by_block_number(request_page uint, block string, response *[]types.Fetch_transactions_st) error {
+    //if ( request_page < 1 ) {
+    //    fmt.Println( "request page < 1" )
+    //    return nil
+    //}
+
+    // limit: 30 transactions per page
+    LIMIT_PER_PAGE := uint(30)
+    //REQ_ROWS := (LIMIT_PER_PAGE * request_page)
+    OFFSET := (LIMIT_PER_PAGE * request_page)
+
+    query_str := fmt.Sprintf(
+        "SELECT * FROM %s WHERE blocks = '%s' ORDER BY timestamp DESC LIMIT %d,%d",
+        TABLE_NAME__TXID_ALL, block, OFFSET, LIMIT_PER_PAGE,
+    )
+
+
+    *response = t._query( _E_TYPE__ALL, query_str )
+
+    return nil
+}
+
+func (t *LocalDB) Db_select_txns_all_mixed_by_txid(request_page uint, txid string, response *[]types.Fetch_transactions_st) error {
+    //if ( request_page < 1 ) {
+    //    fmt.Println( "request page < 1" )
+    //    return nil
+    //}
+
+    // limit: 30 transactions per page
+    LIMIT_PER_PAGE := uint(30)
+    //REQ_ROWS := (LIMIT_PER_PAGE * request_page)
+    OFFSET := (LIMIT_PER_PAGE * request_page)
+
+    query_str := fmt.Sprintf(
+        "SELECT * FROM %s WHERE txid = '%s' ORDER BY timestamp DESC LIMIT %d,%d",
+        TABLE_NAME__TXID_ALL, txid, OFFSET, LIMIT_PER_PAGE,
+    )
+
+
+    *response = t._query( _E_TYPE__ALL, query_str )
+
+    return nil
+}
+
+func (t *LocalDB) Db_select_txns_all_mixed_by_address(request_page uint, address string, response *[]types.Fetch_transactions_st) error {
+    //if ( request_page < 1 ) {
+    //    fmt.Println( "request page < 1" )
+    //    return nil
+    //}
+
+    // limit: 30 transactions per page
+    LIMIT_PER_PAGE := uint(30)
+    //REQ_ROWS := (LIMIT_PER_PAGE * request_page)
+    OFFSET := (LIMIT_PER_PAGE * request_page)
+
+    query_str := fmt.Sprintf(
+        "SELECT * FROM %s WHERE (from_address = '%s' or to_address = '%s') ORDER BY timestamp DESC LIMIT %d,%d",
+        TABLE_NAME__TXID_ALL, address, address, OFFSET, LIMIT_PER_PAGE,
+    )
+
+
+    *response = t._query( _E_TYPE__ALL, query_str )
+
+    return nil
+}
+
+//! TODO
+func (t *LocalDB) Db_select_balances_by_address(request_page uint, address string, response *[]types.Fetch_balances_st) error {
+    //if ( request_page < 1 ) {
+    //    fmt.Println( "request page < 1" )
+    //    return nil
+    //}
+
+    // limit: 30 balances per page
+    //LIMIT_PER_PAGE := uint(30)
+    //REQ_ROWS := (LIMIT_PER_PAGE * request_page)
+    //OFFSET := (LIMIT_PER_PAGE * request_page)
+
+    //! ALL balances (sum all)
+    query_str := fmt.Sprintf(
+        //"SELECT * FROM %s WHERE (from_address = '%s' or to_address = '%s') ORDER BY timestamp DESC LIMIT %d,%d",
+        //TABLE_NAME__BALANCES_ALL, address, address, OFFSET, LIMIT_PER_PAGE,
+
+        "SELECT address, token_symbol, (sum_of_group_by_token_symbol) FROM %s WHERE address = '%s' ORDER BY timestamp ASC",
+        TABLE_NAME__BALANCES_ALL, address, address,
+    )
+
+
+    *response = t._query_balances( query_str )
+
+    return nil
+}
+
+
+
+
+// ---------------------------------------------------------------
+
+
+
+//func (t *LocalDB) Run_worker_cache(val bool) {
+//}
+
+
+func (t *LocalDB) Rpc_test(extra uint, response *string) error {
+    *response = string( "Rpc_test()" )
+
+    return nil
+}
+
+
+func (t *LocalDB) Db_memory_update_txns_all_mixed() error {
+    var request_page = uint(0)
+    var result []types.Fetch_transactions_st
+
+
+    t.Db_select_txns_all_mixed( request_page, &result )
+
+
+    query := "DROP TABLE memory_txid;"
+    _, _err := t.DbMemory.Exec( query )
+    if _err != nil {
+        //log.Printf( "Error: %q: %s\n", _err, query )
+        fmt.Printf( "Error: %q: %s\n", _err, query )
+        panic( _err.Error() )
+    }
+    query = "CREATE TABLE memory_txid (idx integer not null primary key autoincrement, txid_json text);"
+    _, _err = t.DbMemory.Exec( query )
+    if _err != nil {
+        //log.Printf( "Error: %q: %s\n", _err, query )
+        fmt.Printf( "Error: %q: %s\n", _err, query )
+        panic( _err.Error() )
+    }
+
+
+    //fmt.Printf( "Db_memory_update_txns_all_mixed(): = %s, \n", result[0].From_address )
+    for i := 0; i < len(result); i++ {
+        //fmt.Printf( "Db_memory_update_txns_all_mixed(): [%d] = %s, \n", i, result[i] )
+        res_json := types.Fetch_transactions_json( &result[i] )
+        //fmt.Printf( "Db_memory_update_txns_all_mixed(): [%d] = %s, \n", i, res_json )
+
+        tx, err := t.DbMemory.Begin()
+        if err != nil {
+            //log.Fatal( err )
+            panic( err.Error() )
+        }
+        //stmt, err := tx.Prepare( "INSERT INTO " + DB_MEMORY_TABLE_NAME__TXID_ALL + "(idx, txid_json) VALUES(?, ?)" )
+        stmt, err := tx.Prepare( "INSERT INTO " + DB_MEMORY_TABLE_NAME__TXID_ALL + "(txid_json) VALUES(?)" )
+        if err != nil {
+            //log.Fatal( err )
+            panic( err.Error() )
+        }
+        defer stmt.Close()
+
+        //_, err = stmt.Exec( i, res_json )
+        _, err = stmt.Exec( res_json )
+        if err != nil {
+            //log.Fatal( err )
+            panic( err.Error() )
+        }
+        tx.Commit()
+    }
+
+
+    //t.Db_memory_select_txns_all_mixed()
+    /*
+    query := "SELECT idx, txid_json FROM " + DB_MEMORY_TABLE_NAME__TXID_ALL
+
+    rows, err := t.DbMemory.Query( query )
+    if err != nil {
+        //log.Printf( "Error: %q: %s\n", err, query )
+        fmt.Printf( "Error: %q: %s\n", err, query )
+        panic( err.Error() )
+    }
+
+    for rows.Next() {
+        var idx int
+        var txid_json string
+        err = rows.Scan( &idx, &txid_json )
+
+        if err != nil {
+            //log.Fatal(err)
+            panic( err.Error() )
+        }
+
+        fmt.Println( fmt.Sprintf( "idx = %d, txid_json = %s\n", idx, txid_json ) )
+    }
+
+    err = rows.Err()
+    if err != nil {
+        //log.Fatal(err)
+        panic( err.Error() )
+    }
+    */
+
+    return nil
+}
+
+func (t *LocalDB) Db_memory_update_blocks_info() error {
+    var request_page = uint(0)
+    var result []types.Fetch_blocks_info_st
+
+
+    t.Db_select_blocks_info( request_page, &result )
+
+
+    query := "DROP TABLE memory_blocks;"
+    _, _err := t.DbMemory.Exec( query )
+    if _err != nil {
+        //log.Printf( "Error: %q: %s\n", _err, query )
+        fmt.Printf( "Error: %q: %s\n", _err, query )
+        panic( _err.Error() )
+    }
+    query = "CREATE TABLE memory_blocks (idx integer not null primary key autoincrement, blocks text, blocks_hash text, info text, transactions text);"
+    _, _err = t.DbMemory.Exec( query )
+    if _err != nil {
+        //log.Printf( "Error: %q: %s\n", _err, query )
+        fmt.Printf( "Error: %q: %s\n", _err, query )
+        panic( _err.Error() )
+    }
+
+
+    //fmt.Printf( "Db_memory_update_blocks_info(): = %s, \n", result[0].Block_number )
+    for i := 0; i < len(result); i++ {
+        //fmt.Printf( "Db_memory_update_blocks_info(): [%d] = %s, \n", i, result[i] )
+        //res_json := types.Fetch_blocks_json( &result[i] )
+
+        tx, err := t.DbMemory.Begin()
+        if err != nil {
+            //log.Fatal( err )
+            panic( err.Error() )
+        }
+        //stmt, err := tx.Prepare( "INSERT INTO " + DB_MEMORY_TABLE_NAME__BLOCKS_INFO + "(idx, blocks, blocks_hash, info, transactions) VALUES(?, ?, ?, ?, ?)" )
+        stmt, err := tx.Prepare( "INSERT INTO " + DB_MEMORY_TABLE_NAME__BLOCKS_INFO + "(blocks, blocks_hash, info, transactions) VALUES(?, ?, ?, ?)" )
+        if err != nil {
+            //log.Fatal( err )
+            panic( err.Error() )
+        }
+        defer stmt.Close()
+
+        _, err = stmt.Exec( //i,
+                            &result[i].Block_number,
+                            &result[i].Block_hash,
+                            &result[i].Info,
+                            &result[i].Transactions )
+        if err != nil {
+            //log.Fatal( err )
+            panic( err.Error() )
+        }
+        tx.Commit()
+    }
+
+
+    //t.Db_memory_select_txns_all_mixed()
+    /*
+    query := "SELECT * FROM " + DB_MEMORY_TABLE_NAME__BLOCKS_INFO
+
+    rows, err := t.DbMemory.Query( query )
+    if err != nil {
+        //log.Printf( "Error: %q: %s\n", err, query )
+        fmt.Printf( "Error: %q: %s\n", err, query )
+        panic( err.Error() )
+    }
+
+    for rows.Next() {
+        var idx int
+        var blocks string
+        var blocks_hash string
+        var info string
+        var transactions string
+
+        err = rows.Scan( &idx, &blocks, &blocks_hash, &info, &transactions )
+
+        if err != nil {
+            //log.Fatal(err)
+            panic( err.Error() )
+        }
+
+        fmt.Println( fmt.Sprintf( "idx = %d, blocks = %s, blocks_hash = %s, info = %s, transactions = %s\n", id, blocks, blocks_hash, info, transactions ) )
+    }
+
+    err = rows.Err()
+    if err != nil {
+        //log.Fatal(err)
+        panic( err.Error() )
+    }
+    */
+
+    return nil
+}
+
+//! TODO
+func (t *LocalDB) Db_memory_update_balances() error {
+    //var request_page = uint(0)
+    //var result []types.Fetch_balances_st
+
+    fmt.Println( "TODO: Db_memory_update_balances()" );
+
+    return nil
+}
+
+//func (t *LocalDB) Db_memory_select_txns_all_mixed(request_page uint, response *string) error {
+func (t *LocalDB) Db_memory_select_txns_all_mixed(request_page uint, response *[]types.Fetch_transactions_st) error {
+    // limit: 30 transactions per page
+    //LIMIT_PER_PAGE := uint(30)
+    ////REQ_ROWS := (LIMIT_PER_PAGE * request_page)
+    //OFFSET := (LIMIT_PER_PAGE * request_page)
+
+    //var json_map_arr = make( map[string][]interface{} )
+    //var json_arr = make( []interface{} )
+    var json_arr []types.Fetch_transactions_st
+    ////var json_map = make( map[string]interface{} )
+
+
+    query := fmt.Sprintf(
+        //"SELECT idx, txid_json FROM %s limit %d,%d",
+        //DB_MEMORY_TABLE_NAME__TXID_ALL, OFFSET, LIMIT_PER_PAGE,
+
+        //! DO NOT USE "ORDER BY idx DESC"
+        // SEE: Db_select_txns_all_mixed()
+        // - "ORDER BY timestamp DESC" already
+        "SELECT * FROM %s",
+        DB_MEMORY_TABLE_NAME__TXID_ALL,
+    )
+
+    rows, err := t.DbMemory.Query( query )
+    if err != nil {
+        //log.Printf( "Error: %q: %s\n", err, query )
+        fmt.Printf( "Error: %q: %s\n", err, query )
+        panic( err.Error() )
+    }
+    defer rows.Close()
+
+    for rows.Next() {
+        var idx int
+        var txid_json string
+
+        err = rows.Scan( &idx, &txid_json )
+
+        if err != nil {
+            //log.Fatal(err)
+            panic( err.Error() )
+        }
+
+        //fmt.Println( fmt.Sprintf( "idx = %d, txid_json = %s\n", idx, txid_json ) )
+
+        //var _data = make( map[string]interface{} )
+        var _data types.Fetch_transactions_st
+        err = json.Unmarshal( []byte(txid_json), &_data )
+        if err != nil {
+            //log.Fatal(err)
+            panic( err.Error() )
+        }
+        ////json_map["txid"] = _data
+        //json_map_arr["txid"] = append( json_map_arr["txid"], _data )
+        json_arr = append( json_arr, _data )
+    }
+
+    err = rows.Err()
+    if err != nil {
+        //log.Fatal(err)
+        panic( err.Error() )
+    }
+
+    ////result, err_marshal := json.Marshal( json_map )
+    //result, err_marshal := json.Marshal( json_map_arr )
+    //if err_marshal != nil {
+    //    panic( err_marshal.Error() )
+    //}
+
+
+    //*response = string(result)
+    *response = json_arr
+
+    return nil
+}
+
+
+func (t *LocalDB) Db_memory_select_blocks_info(request_page uint, response *[]types.Fetch_blocks_info_st) error {
+    // limit: 30 transactions per page
+    //LIMIT_PER_PAGE := uint(30)
+    ////REQ_ROWS := (LIMIT_PER_PAGE * request_page)
+    //OFFSET := (LIMIT_PER_PAGE * request_page)
+
+    //var json_map_arr = make( map[string][]interface{} )
+    //var json_arr = make( []interface{} )
+    var json_arr []types.Fetch_blocks_info_st
+    ////var json_map = make( map[string]interface{} )
+
+
+    query := fmt.Sprintf(
+        //"SELECT idx, blocks, blocks_hash, info, transactions FROM %s limit %d,%d",
+        //DB_MEMORY_TABLE_NAME__BLOCKS_INFO, OFFSET, LIMIT_PER_PAGE,
+
+        //! DO NOT USE "ORDER BY blocks DESC"
+        // SEE: Db_select_blocks_info()
+        // - "ORDER BY blocks DESC" already
+        "SELECT * FROM %s",
+        DB_MEMORY_TABLE_NAME__BLOCKS_INFO,
+    )
+
+    rows, err := t.DbMemory.Query( query )
+    if err != nil {
+        //log.Printf( "Error: %q: %s\n", err, query )
+        fmt.Printf( "Error: %q: %s\n", err, query )
+        panic( err.Error() )
+    }
+    defer rows.Close()
+
+    for rows.Next() {
+        var idx int
+        var blocks string
+        var blocks_hash string
+        var info string
+        var transactions string
+
+        err = rows.Scan( &idx, &blocks, &blocks_hash, &info, &transactions )
+
+        if err != nil {
+            //log.Fatal(err)
+            panic( err.Error() )
+        }
+
+        //fmt.Println( fmt.Sprintf( "idx = %d, blocks = %s, blocks_hash = %s, info = %s, transactions = %s\n", idx, blocks, blocks_hash, info, transactions ) )
+
+        //var _data = make( map[string]interface{} )
+        var _data = types.Fetch_blocks_info_st { Block_number: blocks, Block_hash: blocks_hash, Info: info, Transactions: transactions }
+        /*
+        err = json.Unmarshal( []byte(info), &_data )
+        if err != nil {
+            //log.Fatal(err)
+            panic( err.Error() )
+        }
+        */
+        ////json_map["blocks_info"] = _data
+        //json_map_arr["blocks_info"] = append( json_map_arr["blocks_info"], _data )
+        json_arr = append( json_arr, _data )
+    }
+
+    err = rows.Err()
+    if err != nil {
+        //log.Fatal(err)
+        panic( err.Error() )
+    }
+
+    ////result, err_marshal := json.Marshal( json_map )
+    //result, err_marshal := json.Marshal( json_map_arr )
+    //if err_marshal != nil {
+    //    panic( err_marshal.Error() )
+    //}
+
+
+    //*response = string(result)
+    *response = json_arr
+
+    return nil
+}
+
+
+
+// ---------------------------------------------------------------
+
+
+
+// HTTP JSON-RPC Server: for frontend
+
+func (t *LocalDB) JSONRPC_test(request *http.Request, rpc_args *types.RPC_DummyArgs_st, response *string) error {
+    *response = fmt.Sprintf( "JSONRPC_test(): %d", rpc_args.Dummy )
+
+    return nil
+}
+
+func (t *LocalDB) JSONRPC_get_txns_all_mixed(request *http.Request, rpc_args *types.RPC_DummyArgs_st, response *string) error {
+    log.Println( "JSONRPC_get_txns_all_mixed()" )
+
+    var _result []types.Fetch_transactions_st
+    //var result_str string
+    OFFSET := uint(0)
+
+    //err := t.Db_memory_select_txns_all_mixed( OFFSET, &result_str )
+    err := t.Db_memory_select_txns_all_mixed( OFFSET, &_result )
+    if err != nil {
+        log.Fatal( "JSONRPC_get_txns_all_mixed(): Error: ", err )
+    }
+
+    //*response = result_str
+
+
+    result, err_marshal := json.Marshal( _result )
+    if err_marshal != nil {
+        panic( err_marshal.Error() )
+    }
+
+
+    //var json_map_arr = make( map[string]interface{} )
+    //json_map_arr["txid"] = _result
+    //
+    //result, err_marshal := json.Marshal( json_map_arr )
+    //if err_marshal != nil {
+    //    panic( err_marshal.Error() )
+    //}
+
+
+    *response = string(result)
+
+
+    return nil
+}
+
+func (t *LocalDB) JSONRPC_get_latest_block_number(request *http.Request, rpc_args *types.RPC_DummyArgs_st, response *string) error {
+    log.Println( "JSONRPC_get_latest_block_number()" )
+
+    var _result []types.Fetch_blocks_info_st
+    //var result_str string
+    OFFSET := uint(0)
+
+    //err := t.Db_memory_select_blocks_info( OFFSET, &result_str )
+    err := t.Db_memory_select_blocks_info( OFFSET, &_result )
+    if err != nil {
+        log.Fatal( "JSONRPC_get_latest_block_number(): Error: ", err )
+    }
+
+    //*response = result_str
+
+
+    if len(_result) <= 0 {
+        return nil
+    }
+
+
+    // first row (latest block; DESC already)
+    result, err_marshal := json.Marshal( _result[0] )
+    if err_marshal != nil {
+        panic( err_marshal.Error() )
+    }
+
+
+    //var json_map_arr = make( map[string]interface{} )
+    //json_map_arr["blocks_info"] = _result
+    //
+    //result, err_marshal := json.Marshal( json_map_arr )
+    //if err_marshal != nil {
+    //    panic( err_marshal.Error() )
+    //}
+
+
+    *response = string(result)
+
+
+    return nil
+}
+
+func (t *LocalDB) JSONRPC_get_blocks_info(request *http.Request, rpc_args *types.RPC_DummyArgs_st, response *string) error {
+    log.Println( "JSONRPC_get_blocks_info()" )
+
+    var _result []types.Fetch_blocks_info_st
+    //var result_str string
+    OFFSET := uint(0)
+
+    //err := t.Db_memory_select_blocks_info( OFFSET, &result_str )
+    err := t.Db_memory_select_blocks_info( OFFSET, &_result )
+    if err != nil {
+        log.Fatal( "JSONRPC_get_blocks_info(): Error: ", err )
+    }
+
+    //*response = result_str
+
+
+    result, err_marshal := json.Marshal( _result )
+    if err_marshal != nil {
+        panic( err_marshal.Error() )
+    }
+
+
+    //var json_map_arr = make( map[string]interface{} )
+    //json_map_arr["blocks_info"] = _result
+    //
+    //result, err_marshal := json.Marshal( json_map_arr )
+    //if err_marshal != nil {
+    //    panic( err_marshal.Error() )
+    //}
+
+
+    *response = string(result)
+
+
+    return nil
+}
+
+func (t *LocalDB) JSONRPC_get_block_by_number(request *http.Request, rpc_args *types.RPC_Args_st, response *string) error {
+    log.Println( "JSONRPC_get_block_by_number()" )
+
+    var _result []types.Fetch_blocks_info_st
+    //var result_str string
+    //OFFSET := uint( rpc_args.Req_page )
+    BLOCK := rpc_args.Req_block
+
+    err := t.Db_select_block_by_number( BLOCK, &_result )
+    if err != nil {
+        log.Fatal( "JSONRPC_get_block_by_number(): Error: ", err )
+    }
+
+    //*response = result_str
+
+
+    result, err_marshal := json.Marshal( _result )
+    if err_marshal != nil {
+        panic( err_marshal.Error() )
+    }
+
+
+    //var json_map_arr = make( map[string]interface{} )
+    //json_map_arr["blocks_info"] = _result
+    //
+    //result, err_marshal := json.Marshal( json_map_arr )
+    //if err_marshal != nil {
+    //    panic( err_marshal.Error() )
+    //}
+
+
+    *response = string(result)
+
+
+    return nil
+}
+
+func (t *LocalDB) JSONRPC_get_txns_all_mixed_by_block_number(request *http.Request, rpc_args *types.RPC_Args_st, response *string) error {
+    log.Println( "JSONRPC_get_txns_all_mixed_by_block_number()" )
+
+    var _result []types.Fetch_transactions_st
+    //var result_str string
+    OFFSET := uint( rpc_args.Req_page )
+    BLOCK := rpc_args.Req_block
+
+    err := t.Db_select_txns_all_mixed_by_block_number( OFFSET, BLOCK, &_result )
+    if err != nil {
+        log.Fatal( "JSONRPC_get_txns_all_mixed_by_block_number(): Error: ", err )
+    }
+
+
+    result, err_marshal := json.Marshal( _result )
+    if err_marshal != nil {
+        panic( err_marshal.Error() )
+    }
+
+
+    //var json_map_arr = make( map[string]interface{} )
+    //json_map_arr["txid"] = _result
+    //
+    //result, err_marshal := json.Marshal( json_map_arr )
+    //if err_marshal != nil {
+    //    panic( err_marshal.Error() )
+    //}
+
+
+    *response = string(result)
+
+    return nil
+}
+
+func (t *LocalDB) JSONRPC_get_txns_all_mixed_by_txid(request *http.Request, rpc_args *types.RPC_Args_st, response *string) error {
+    log.Println( "JSONRPC_get_txns_all_mixed_by_txid()" )
+
+    var _result []types.Fetch_transactions_st
+    //var result_str string
+    OFFSET := uint( rpc_args.Req_page )
+    TXID := rpc_args.Req_txid
+
+    err := t.Db_select_txns_all_mixed_by_txid( OFFSET, TXID, &_result )
+    if err != nil {
+        log.Fatal( "JSONRPC_get_txns_all_mixed_by_txid(): Error: ", err )
+    }
+
+
+    result, err_marshal := json.Marshal( _result )
+    if err_marshal != nil {
+        panic( err_marshal.Error() )
+    }
+
+
+    //var json_map_arr = make( map[string]interface{} )
+    //json_map_arr["txid"] = _result
+    //
+    //result, err_marshal := json.Marshal( json_map_arr )
+    //if err_marshal != nil {
+    //    panic( err_marshal.Error() )
+    //}
+
+
+    *response = string(result)
+
+    return nil
+}
+
+func (t *LocalDB) JSONRPC_get_txns_all_mixed_by_address(request *http.Request, rpc_args *types.RPC_Args_st, response *string) error {
+    log.Println( "JSONRPC_get_txns_all_mixed_by_address()" )
+
+    var _result []types.Fetch_transactions_st
+    //var result_str string
+    OFFSET := uint( rpc_args.Req_page )
+    ADDRESS := rpc_args.Req_address
+
+    err := t.Db_select_txns_all_mixed_by_address( OFFSET, ADDRESS, &_result )
+    if err != nil {
+        log.Fatal( "JSONRPC_get_txns_all_mixed_by_address(): Error: ", err )
+    }
+
+
+    result, err_marshal := json.Marshal( _result )
+    if err_marshal != nil {
+        panic( err_marshal.Error() )
+    }
+
+
+    //var json_map_arr = make( map[string]interface{} )
+    //json_map_arr["txid"] = _result
+    //
+    //result, err_marshal := json.Marshal( json_map_arr )
+    //if err_marshal != nil {
+    //    panic( err_marshal.Error() )
+    //}
+
+
+    *response = string(result)
+
+    return nil
+}
+
+//! TODO
+func (t *LocalDB) JSONRPC_get_balances_by_address(request *http.Request, rpc_args *types.RPC_Args_st, response *string) error {
+    log.Println( "JSONRPC_get_balances_by_address()" )
+    log.Println( "TODO: JSONRPC_get_balances_by_address()" )
+    return nil;
+
+    var _result []types.Fetch_balances_st
+    //var result_str string
+    OFFSET := uint( rpc_args.Req_page )
+    ADDRESS := rpc_args.Req_address
+
+    err := t.Db_select_balances_by_address( OFFSET, ADDRESS, &_result )
+    if err != nil {
+        log.Fatal( "JSONRPC_get_balances_by_address(): Error: ", err )
+    }
+
+
+    result, err_marshal := json.Marshal( _result )
+    if err_marshal != nil {
+        panic( err_marshal.Error() )
+    }
+
+
+    //var json_map_arr = make( map[string]interface{} )
+    //json_map_arr["txid"] = _result
+    //
+    //result, err_marshal := json.Marshal( json_map_arr )
+    //if err_marshal != nil {
+    //    panic( err_marshal.Error() )
+    //}
+
+
+    *response = string(result)
+
+    return nil
+}
+
+func (t *LocalDB) JSONRPC_search_all(request *http.Request, rpc_args *types.RPC_Args_st, response *string) error {
+    log.Println( "JSONRPC_search_all()" )
+
+    var _result []types.Fetch_transactions_st
+    var err error
+    //var result_str string
+    OFFSET := uint( rpc_args.Req_page )
+    SEARCH := rpc_args.Req_search
+    IS_DIGIT := regexp.MustCompile(`^[0-9]+$`)
+
+    if SEARCH[0] == '0' && SEARCH[1] == 'x' {
+        if len(SEARCH) == (2+40) {
+            // address, contract address
+            fmt.Println( "JSONRPC_search_all(): Search: address, contract address" )
+
+            err = t.Db_select_txns_all_mixed_by_address( OFFSET, SEARCH, &_result )
+        } else if len(SEARCH) == (2+64) {
+            // txid
+            fmt.Println( "JSONRPC_search_all(): Search: txid" )
+
+            err = t.Db_select_txns_all_mixed_by_txid( OFFSET, SEARCH, &_result )
+        } else {
+            // error
+            fmt.Println( "JSONRPC_search_all(): Search: unknown" )
+            return nil
+        }
+    } else if IS_DIGIT.MatchString(SEARCH) {
+        // block number
+        fmt.Println( "JSONRPC_search_all(): Search: block number" )
+
+        err = t.Db_select_txns_all_mixed_by_block_number( OFFSET, SEARCH, &_result )
+    } else {
+        // error
+        fmt.Println( "JSONRPC_search_all(): Search: unknown" )
+        return nil
+    }
+
+
+
+    if err != nil {
+        fmt.Println( "JSONRPC_search_all(): Error: ", err )
+        return nil
+    }
+
+    result, err_marshal := json.Marshal( _result )
+    if err_marshal != nil {
+        //panic( err_marshal.Error() )
+        log.Fatal( "JSONRPC_search_all(): Error: ", err_marshal.Error() )
+        return nil
+    }
+
+
+    *response = string(result)
+
+    return nil
+}
+
+
+
+// ---------------------------------------------------------------
+
+
+
+// Source: https://stackoverflow.com/questions/25927660/how-to-get-the-current-function-name
+func __trace() {
+    pc := make([]uintptr, 10)  // at least 1 entry needed
+    runtime.Callers(2, pc)
+    f := runtime.FuncForPC(pc[0])
+    file, line := f.FileLine(pc[0])
+    fmt.Printf("%s:%d %s\n", file, line, f.Name())
+}
+
+
+
