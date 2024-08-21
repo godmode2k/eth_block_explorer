@@ -48,6 +48,15 @@ $ sudo apt-get install mariadb-server
 
 
 ---------------------------------
+Ethereum Private Network
+---------------------------------
+SEE:
+ - https://github.com/godmode2k/blockchain/tree/master/build_guide
+ - (Docker) https://github.com/godmode2k/blockchain/tree/master/build_guide/ethereum
+
+
+
+---------------------------------
 Golang
 ---------------------------------
 $ wget https://go.dev/dl/go1.22.5.linux-amd64.tar.gz
