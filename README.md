@@ -16,9 +16,9 @@ Environment
     GNU/Linux: Ubuntu 20.04_x64 LTS
     Ethereum: geth vx.x.x
     Python: v3.8.10 (pip 20.0.2)
-    Go: go1.15.5 linux/amd64
+    Go: go1.22.5 linux/amd64
     Network: Ethereum Private Network
-    Node.js: node-v16.13.2
+    Node.js: node-v20.15.0
     MySQL: v8.0.32
 
 
@@ -48,20 +48,31 @@ $ sudo apt-get install mariadb-server
 
 
 ---------------------------------
+Ethereum Private Network
+---------------------------------
+SEE:
+ - https://github.com/godmode2k/blockchain/tree/master/build_guide
+ - (Docker) https://github.com/godmode2k/blockchain/tree/master/build_guide/ethereum
+
+
+
+---------------------------------
 Golang
 ---------------------------------
-$ wget https://go.dev/dl/go1.15.5.linux-amd64.tar.gz
+$ wget https://go.dev/dl/go1.22.5.linux-amd64.tar.gz
+$ tar xzvf go1.22.5.linux-amd64.tar.gz -C /usr/local/
+$ echo 'export PATH=$PATH:/usr/local/go/bin' >> $HOME/.profile
+$ echo 'export PATH=$PATH:/usr/local/go/bin' >> $HOME/.bashrc
 
 
 
 ---------------------------------
 Node.js
 ---------------------------------
-$ wget https://nodejs.org/dist/v16.13.2/node-v16.13.2-linux-x64.tar.xz
-$ tar xJvf node-v16.13.2-linux-x64.tar.xz
-$ export PATH=`pwd`/node-v16.13.2-linux-x64/bin:$PATH
-$ echo export PATH=`pwd`/node-v16.13.2-linux-x64/bin:$PATH >> $HOME/.profile
-$ echo export PATH=`pwd`/node-v16.13.2-linux-x64/bin:$PATH >> $HOME/.bashrc
+$ wget https://nodejs.org/dist/v20.15.0/node-v20.15.0-linux-x64.tar.xz
+$ tar xJvf node-v20.15.0-linux-x64.tar.xz
+$ echo 'export PATH=$PATH:$HOME/node-v20.15.0-linux-x64/bin' >> $HOME/.profile
+$ echo 'export PATH=$PATH:$HOME/node-v20.15.0-linux-x64/bin' >> $HOME/.bashrc
 
 
 
@@ -150,6 +161,73 @@ $ npm run serve
 
 (Web Browser)
 http://127.0.0.1:4396
+
+
+
+---------------------------------
+NodeJS: node-v20.15.0
+Error:
+---------------------------------
+// Frontend
+
+$ cd frontend
+
+
+// ERROR #1
+$ npm install
+
+(ERROR)
+npm error gyp ERR! UNCAUGHT EXCEPTION
+npm error gyp ERR! stack TypeError: Cannot assign to read only property 'cflags' of object '#<Object>'
+...
+npm error gyp ERR! node -v v20.15.0
+npm error gyp ERR! node-gyp -v v7.1.2
+npm error gyp ERR! Node-gyp failed to build your package.
+
+(FIX)
+// node-sass
+// https://github.com/sass/node-sass
+//
+// NodeJS 20: 9.0+ (supported)
+// NodeJS 19: 8.0+ (supported)
+// ...
+
+(EDIT)
+$ vim package.json
+"devDependencies": {
+...
+"node-sass": "^9.0.0",
+...
+}
+$ npm install
+
+
+
+// ERROR #2
+$ npm run serve
+
+(ERROR)
+Error: error:0308010C:digital envelope routines::unsupported
+
+(FIX)
+$ export NODE_OPTIONS=--openssl-legacy-provider
+$ npm run serve
+or
+$ NODE_OPTIONS=--openssl-legacy-provider npm run serve
+
+
+
+// ERROR #3
+$ NODE_OPTIONS=--openssl-legacy-provider npm run serve
+
+(ERROR)
+Node Sass version 9.0.0 is incompatible with ^4.0.0 || ^5.0.0 || ^6.0.0.
+
+(FIX)
+$ rm -f package-lock.json
+$ rm -fr node_modules
+$ npm install
+$ npm run serve
 
 ```
 
