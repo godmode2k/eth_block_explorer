@@ -2524,10 +2524,11 @@ func get_blocks_all() {
         block_num_end_uint64, _ = strconv.ParseUint( block_num_end, 10, 64 )
 
 
-if ( block_height_from_db_uint64 < 240 ) {
-block_height_from_db_uint64 = 240
-block_height_old_uint64 = block_height_from_db_uint64
-}
+// test
+//if ( block_height_from_db_uint64 < 240 ) {
+//block_height_from_db_uint64 = 240
+//block_height_old_uint64 = block_height_from_db_uint64
+//}
 
 
         if ( block_height_old_uint64 <= 0 ) {
@@ -2562,7 +2563,8 @@ block_height_old_uint64 = block_height_from_db_uint64
 }
 
 //func _get_token_creation_txn_info(txn map[string]interface{}) {
-func _get_token_creation_txn_info(txid string ) types.Fetch_transactions_st {
+//func _get_token_creation_txn_info(txid string ) types.Fetch_transactions_st {
+func _get_token_creation_txn_info(txid string, timestamp string, datetime string) types.Fetch_transactions_st {
     TAG := "_get_token_creation_txn_info(): "
 
     fmt.Println( TAG, "Token creation transaction: 0x60606040 or 0x60806040" )
@@ -2580,7 +2582,12 @@ func _get_token_creation_txn_info(txid string ) types.Fetch_transactions_st {
     var tx_block_number = ""
     var tx_hash = txid
     var timestamp_unixtime = ""
-    var tx_timestamp_date time.Time
+    //var tx_timestamp_date time.Time
+    var tx_timestamp_date = ""
+
+    timestamp_unixtime = timestamp
+    tx_timestamp_date = datetime
+
 
 
     tx_token_type := "erc20" // default: "erc20"
@@ -3237,7 +3244,7 @@ func _get_token_creation_txn_info(txid string ) types.Fetch_transactions_st {
                 // ASCII
                 tx_token_uri_with_token_id = strings.Replace( uri_str, "{id}", token_id_str, -1 )
             }
-            */
+            //*/
 
             fmt.Println( "token_contract address =", tx_to )
             fmt.Println( "token_from =", tx_token_from )
@@ -3879,6 +3886,7 @@ func get_blocks_all_infinite(block_num_start_uint64 uint64, block_num_end_uint64
                             //fmt.Println( "checks len: ", checks_len )
 
                             if len(uri_hex_str) <= checks_len {
+                		fmt.Println( "uri_hex_str = ", uri_hex_str )
                                 log.Fatal( "invalid length: ", len(uri_hex_str) )
                             }
 
@@ -4051,7 +4059,9 @@ func get_blocks_all_infinite(block_num_start_uint64 uint64, block_num_end_uint64
                     //fmt.Println( "Token creation transaction: //! TODO: get total supply, owner address" )
 
                     //_data := _get_token_creation_txn_info( txn )
-                    _data := _get_token_creation_txn_info( tx_hash.(string) )
+                    //_data := _get_token_creation_txn_info( tx_hash.(string) )
+                    _data := _get_token_creation_txn_info( tx_hash.(string), timestamp_unixtime, fmt.Sprintf("%s", tx_timestamp_date) )
+
                     fmt.Println( "=== _data ===" )
                     fmt.Println( _data )
                     if len(_data.From_address) <= 0 {

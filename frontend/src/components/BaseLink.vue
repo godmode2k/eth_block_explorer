@@ -1,4 +1,5 @@
 <template>
+<!--
   <el-link
     :href="`./#/${target}${!param ? '' : '?' + param.key + '=' + param.value}`"
     :underline="false"
@@ -6,6 +7,17 @@
     :class="{ underline: underline }"
     >{{ label }}</el-link
   >
+-->
+
+  <el-link
+    :href="`./#/${target}${!param ? '' : '?' + param.key + '=' + param.value}`"
+    :underline="false"
+    type="primary"
+    :class="{ underline: underline }"
+    >
+    <div> <span style="font-size: 12px;"> {{ label }} </span> </div>
+  </el-link>
+
 </template>
 <script>
 export default {

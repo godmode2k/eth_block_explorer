@@ -284,11 +284,20 @@ export default {
     &::before {
       height: 0 !important;
     }
+
     .header-row th {
       background: var(--table-header-bg-color);
-      color: var(--table-header-text-color);
+      //color: var(--table-header-text-color);
+
+      // home block/translactions list for Light, Dark mode
+      //color: var(--table-header-hover-text-color);
+      color: var(--table-header-striped-text-color);
+      font-weight: bold;
+      font-size-adjust: 0.60;
+
       border-bottom-color: var(--table-header-border-color) !important;
     }
+
     tr {
       background: var(--table-row-bg-color) !important;
       &:not(.even):hover td {

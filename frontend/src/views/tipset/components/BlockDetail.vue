@@ -4,7 +4,8 @@
     <!-- <div> blocks = {{ realList }}</div> -->
 
     <div class="block-overview">
-      <overview :dataList="realList" :dataLabel="$t('tipset.block.overview')" />
+      <!--<overview :dataList="realList" :dataLabel="$t('tipset.block.overview')" />-->
+      <overview :dataList="dataList" :dataLabel="$t('tipset.block.overview')" />
     </div>
     <!--<message-list :withType="true" :cid="hash" :blocks="realList" />-->
     <message-list :withType="true" :txid="hash" :blocks="realList" />
@@ -132,6 +133,8 @@ export default {
 
 
 
+import { getTransactionsByBlockHash } from "@/api/home";
+
 export default {
   name: "BlockDetail",
   props: {
@@ -139,13 +142,24 @@ export default {
       type: String,
       default: ""
     },
-    block: {
+/*
+    blocks: {
       type: Object,
       default() {
         return {};
       }
     }
+*/
+    //blocks: { type: Array, default() { return []; } }
+    //block: { type: Array, default() { return []; } }
+
+    block: { type: Object, default() { return {}; } }
   },
+  height: {
+    type: String,
+    default: ""
+  },
+
   data() {
     return {
 
@@ -211,21 +225,92 @@ export default {
           key: "height"
         },
         {
+          key: "contract"
+        },
+        {
           key: "timestamp"
+          //key: "datetime"
         },
         {
           key: "transactions"
         }
-
-      ]
+      ],
 
     };
   },
+
+  watch: {
+    option: {
+      deep: true,
+      immediate: true,
+      handler() {
+        this.getMessage();
+      }
+    },
+  },
+
+  methods: {
+    async getMessage() {
+      try {
+        let data = {};
+        data = await getTransactionsByBlockHash( this.hash );
+
+        console.log( "BlockDetail::getMessage(): block data = " );
+        console.log( data );
+
+        const res_txndata_json = JSON.parse(data.result);
+        console.log( "BlockDetail::getMessage(): block jSON data = " );
+        console.log( res_txndata_json );
+
+        const dataList = [
+            { "key": "hash", "style": { "fontWeight": "bold" }, "value": this.hash, "linkList": this.hash },
+            { "key": "height", "value": res_txndata_json[0].block_number, "linkList": [res_txndata_json[0].block_number] },
+            { "key": "timestamp", "value": "" },
+            { "key": "transactions", "value": res_txndata_json.length }
+        ];
+        console.log( "new dataList =" );
+        console.log( dataList );
+        this.dataList = Object.freeze( dataList );
+
+        this.dataList.map(item => {
+          let linkList;
+          console.log( item.key, item.value );
+
+          //if (item.key === "height" || item.key === "miner") {
+          //  linkList = [currentBlock[item.key]];
+          //} else {
+          //  linkList = currentBlock[item.key];
+          //}
+
+          return {
+            ...item,
+            value: dataList[item.key],
+            linkList: linkList
+          };
+        });
+
+
+        console.log( "new this.dataList =" );
+        console.log( this.dataList );
+        return this.dataList;
+
+      } catch (e) {
+        console.log( e );
+      }
+    },
+  },
+
   computed: {
     realList() {
       const currentBlock = this.block;
+      console.log( "===== BlockDetail =====" );
       console.log( "BlockDetail: realList()" );
       console.log( currentBlock );
+      console.log( "len = " + currentBlock.length );
+      console.log( "hash = " + this.hash );
+      console.log( "-----" );
+
+
       return this.dataList.map(item => {
         let linkList;
         console.log( item.key, item.value );
@@ -240,6 +325,7 @@ export default {
           linkList: linkList
         };
       });
+
     }
   }
 };

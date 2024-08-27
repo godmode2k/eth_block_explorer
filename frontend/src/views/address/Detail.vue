@@ -302,6 +302,7 @@ export default {
         },
         {
           key: "time",
+          //key: "datetime",
           //hideInMobile: true
         },
         {
@@ -356,6 +357,7 @@ export default {
         },
         {
           key: "time",
+          //key: "datetime",
           //hideInMobile: true
         },
         {
@@ -465,27 +467,36 @@ export default {
 
 
           ///*
-          const { txid, timestamp, token_type, from_address, to_address, block_number } = item;
+          const { txid, timestamp, datetime, token_type, from_address, to_address, block_number } = item;
           const { token_symbol, amount_eth, token_amount, token_amount_eth } = item;
           let { value } = "";
+          let disp_token_type = "";
+
+          console.log( "datetime = " + datetime );
+          console.log( "timestamp = " + timestamp );
 
           if ( token_type == "ether" ) {
+            disp_token_type = "Ether";
             value = amount_eth + " " + token_symbol;
           }
           else if ( token_type == "erc20" ) {
+            disp_token_type = "ERC-20";
             value = token_amount_eth + " " + token_symbol;
           }
           else if ( token_type == "erc1155" ) {
+            disp_token_type = "ERC-1155";
             value = token_amount + " " + token_symbol;
           }
 
           const ellipsisByLength = this.ellipsisByLength;
 
           let res = {
-            cointype: token_type,
+            cointype: disp_token_type,
             txid: txid,
             height: this.formatNumber(block_number),
-            time: this.formatTime(timestamp),
+            //time: this.formatTime(timestamp),
+            time: this.getFormatTime(timestamp),
+            //time: datetime,
             from: {
               render() {
                   return (

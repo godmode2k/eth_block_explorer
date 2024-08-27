@@ -188,7 +188,8 @@ export default {
 
             height: this.formatNumber(block_number),
             hash: block_hash,
-            timestamp: this.formatTime(parseInt(block_info_json.timestamp, 16)),
+            //timestamp: this.formatTime(parseInt(block_info_json.timestamp, 16)),
+            timestamp: this.formatTime(block_info_json.timestamp),
           };
         });
         this.total = blockData.length;

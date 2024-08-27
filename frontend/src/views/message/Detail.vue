@@ -232,6 +232,11 @@ export default {
           key: "time"
         },
         {
+          key: "contract",
+          isLink: true,
+          ellipsis: true,
+        },
+        {
           key: "from",
           isLink: true,
           target: "address/detail",
@@ -326,6 +331,10 @@ export default {
         type: String,
         default: ""
     },
+    contract: {
+        type: String,
+        default: ""
+    },
     from: {
         type: String,
         default: ""
@@ -390,6 +399,7 @@ export default {
                 const { token_total_supply, token_type, token_uri_ascii } = item;
                 const { token_uri_hexadecimal, txid } = item;
                 let { value } = "";
+                let disp_token_type = "";
 
                 console.log( "block number = " + block_number );
                 console.log( "transaction hash = " + txid );
@@ -404,11 +414,13 @@ export default {
 
 
                 if ( token_type == "ether" ) {
+                    disp_token_type = "Ether";
                     value = amount_eth + " Eth";
                     console.log( "amount_eth = " + amount_eth );
                     console.log( "amount_wei = " + amount_wei );
                 }
                 else if ( token_type == "erc20" ) {
+                    disp_token_type = "ERC-20";
                     value = token_amount_eth + " " + token_symbol;
                     console.log( "token_amount_eth = " + token_amount_eth );
                     console.log( "tonen_amount_wei = " + token_amount_wei );
@@ -417,9 +429,11 @@ export default {
                     console.log( "token_symbol = " + token_symbol );
                     console.log( "token_total_supply = " + token_total_supply );
                 }
-                else if ( token_type == "erc1151" ) {
+                else if ( token_type == "erc1155" ) {
+                    disp_token_type = "ERC-1155";
                     value = token_amount;
                     console.log( "token_amount = " + token_amount );
+                    console.log( "token_contract_address = " + token_contract_address );
                     console.log( "token_data = " + token_data );
                     console.log( "token_data_length = " + token_data_length );
                     console.log( "token_url_ascii = " + token_uri_ascii );
@@ -429,8 +443,30 @@ export default {
 
             sourceMap = {
                 txid: txid,
-                time: this.formatTime(timestamp),
-                cointype: token_type,
+                //time: this.formatTime(timestamp),
+                time: this.getFormatTime(timestamp),
+                //time: datetime,
+                cointype: disp_token_type,
+
+                contract: token_contract_address,
+                //! FIXME
+                /*
+                contract: {
+                  render() {
+                      return (
+                      <a
+                        href={`./#/address/detail?address=${token_contract_address}`}
+                        style={{ color: "var(--link-color)" }}
+                      >
+                        {ellipsisByLength(token_contract_address, 6, true)}
+                      </a>
+                      );
+
+                      //return ( <span>{ellipsisByLength(token_contract_address, 6, true)}</span> );
+                  }
+                },
+                */
+
                 from: {
                   render() {
                       return (

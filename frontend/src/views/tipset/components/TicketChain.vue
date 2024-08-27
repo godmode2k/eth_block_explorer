@@ -682,11 +682,13 @@ export default {
           console.log( "=== block_number = " + this.formatNumber(block_number) );
           console.log( "=== block_hash = " + block_hash );
           //console.log( "=== block_info = " + block_info );
+
           const block_info_json = JSON.parse(block_info)
           console.log( block_info_json );
           console.log( "=== block_info.timestamp = " + block_info_json.timestamp );
+          console.log( "=== block_info.datetime = " + block_info_json.datetime );
           console.log( "=== block_info.timestamp = " + parseInt(block_info_json.timestamp, 16) );
-          console.log( "=== block_info.timestamp = " + this.formatTime(parseInt(block_info_json.timestamp, 16)) );
+          console.log( "=== block_info.timestamp = " + this.formatTime(item.originTime, parseInt(block_info_json.timestamp, 16)) );
           return {
             /*
             height: this.formatNumber(height),
@@ -705,7 +707,9 @@ export default {
 
             height: this.formatNumber(block_number),
             hash: block_hash,
-            timestamp: this.formatTime(parseInt(block_info_json.timestamp, 16)),
+            //timestamp: this.formatTime(parseInt(block_info_json.timestamp, 16)),
+            timestamp: this.getFormatTime(block_info_json.timestamp),
+            //datetime: block_info_json.datetime,
             transactions: transactions,
           };
         });

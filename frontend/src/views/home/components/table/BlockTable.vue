@@ -30,7 +30,6 @@
       :max-height="isMobile ? 200 : 600 * rate"
       :labels="$t('home.blockTable.label')"
       radius
-      :stripe="false"
     ></base-table>
 
   </div>
@@ -419,6 +418,8 @@ export default {
           //const current = new Date().getTime();
           const { block_number, block_hash, block_info, transactions } = item;
 
+          const block_info_json = JSON.parse(block_info)
+
           return {
             //time: 0,
             //originTime: 0,
@@ -426,6 +427,7 @@ export default {
 
             height: block_number,
             hash: block_hash,
+            timestamp: this.getFormatTime(parseInt(block_info_json.timestamp, 16)),
             block_info: block_info,
             transactions: transactions
           };

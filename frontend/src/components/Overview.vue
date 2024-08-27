@@ -1,5 +1,7 @@
 <template>
   <div class="general-overview">
+    <!-- <div> dataList = {{ dataList }} </div> -->
+
     <general-title
       :title="title.label"
       :detail="title.detail"
@@ -108,6 +110,7 @@
   </div>
 </template>
 <script>
+
 import GeneralTitle from "./GeneralTitle";
 export default {
   name: "Overview",
@@ -144,6 +147,7 @@ export default {
         };
       }
     },
+
     dataList: {
       type: Array,
       default: () => {
@@ -172,6 +176,7 @@ export default {
   components: {
     GeneralTitle
   },
+
   computed: {
     realList() {
       return this.dataList.map((item, index) => {
@@ -181,6 +186,7 @@ export default {
         };
       });
     }
+
   }
 };
 </script>

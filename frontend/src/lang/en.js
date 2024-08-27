@@ -377,6 +377,7 @@ const en = {
         "Hash",
         "Height",
         "Time",
+        "Contract",
         "From",
         "To",
         "Value"

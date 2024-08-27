@@ -92,7 +92,8 @@ const mixin = {
         : str;
     },
     getFormatTime(time) {
-      return dayjs(time * 1000).format("MMM Do YYYY HH:mm:ss (UTCZ)");
+      //return dayjs(time * 1000).format("MMM Do YYYY HH:mm:ss (UTCZ)");
+      return dayjs(time * 1000).format("YYYY-MM-DD HH:mm:ss (UTCZ)");
     },
     formatTimeByStr(time, str) {
       return dayjs(time).format(str || "MMM Do YYYY");

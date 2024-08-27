@@ -185,6 +185,7 @@ export default {
         },
         {
           key: "timestamp"
+          //key: "datetime"
         },
         {
           key: "transactions"
@@ -221,6 +222,10 @@ export default {
       Object.values(heightMap).forEach(item => {
         res[item.index] = item.span;
       });
+      console.log( "-----" );
+      console.log( "spanMap():" );
+      console.log( res );
+      console.log( heightMap );
       return res;
     }
   }

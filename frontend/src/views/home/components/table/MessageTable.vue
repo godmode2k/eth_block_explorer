@@ -306,7 +306,8 @@ export default {
             ellipsis: true
           },
           {
-            key: "datetime"
+            //key: "time"
+            key: "datetime2"
           },
           {
             key: "from_address",
@@ -400,6 +401,11 @@ export default {
           // 'value = amount_eth' if amount_eth is not 0x or NULL, 'value = 0' otherwise
           const _value = (!amount_eth || amount_eth.length === 0) ? 0 : amount_eth;
 
+         let disp_token_type = "";
+         if ( token_type == "ether" ) { disp_token_type = "Ether"; }
+         else if ( token_type == "erc20" ) { disp_token_type = "ERC-20"; }
+         else if ( token_type == "erc1155" ) { disp_token_type = "ERC-1155"; }
+
           return {
             time: 0,
             originTime: 0,
@@ -411,7 +417,7 @@ export default {
             to_address: to_address,
             amount_wei: amount_wei,
             amount_eth: amount_eth,
-            token_type: token_type,
+            token_type: disp_token_type,
             token_symbol: token_symbol,
             token_decimals: token_decimals,
             token_total_supply: token_total_supply,
@@ -425,6 +431,7 @@ export default {
             token_data: token_data,
             timestamp: timestamp,
             datetime: datetime,
+            datetime2: this.getFormatTime(timestamp),
             block_number: block_number,
             txid: txid
           };
