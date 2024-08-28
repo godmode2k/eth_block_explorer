@@ -364,6 +364,18 @@ export default {
           //hideInMobile: true
         },
         {
+          key: "tokencontract",
+          isLink: true,
+          target: "address/detail",
+          paramKey: "address",
+          ellipsis: true,
+          isComponent: type === "address"
+        },
+        {
+          key: "tokensymbol",
+          //hideInMobile: true
+        },
+        {
           key: "from",
           isLink: true,
           target: "address/detail",
@@ -616,6 +628,7 @@ export default {
           const { token_uri_hexadecimal, txid } = item;
           let { value } = "";
           let disp_token_type = "";
+          let disp_token_symbol = token_symbol;
 
           console.log( "block number = " + block_number );
           console.log( "transaction hash = " + txid );
@@ -631,6 +644,7 @@ export default {
 
           if ( token_type == "ether" ) {
             disp_token_type = "Ether";
+            disp_token_symbol = "ETH";
             value = amount_eth + " Eth";
             console.log( "amount_eth = " + amount_eth );
             console.log( "amount_wei = " + amount_wei );
@@ -693,6 +707,8 @@ export default {
               }
             },
             value: value,
+            tokensymbol: disp_token_symbol,
+            tokencontract: token_contract_address,
             //value: this.formatFilNumber(value),
             //fee: gasprice,
             //type: this.address !== from ? "in" : "out",

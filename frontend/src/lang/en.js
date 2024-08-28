@@ -21,6 +21,8 @@ const en = {
         "Hash",
         "Height",
         "Time",
+        "Contract",
+        "Symbol",
         "From",
         "To",
         "Value"

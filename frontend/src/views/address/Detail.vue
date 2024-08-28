@@ -306,6 +306,18 @@ export default {
           //hideInMobile: true
         },
         {
+          key: "tokencontract",
+          isLink: true,
+          target: "address/detail",
+          paramKey: "address",
+          ellipsis: true,
+          //isComponent: type === "address"
+        },
+        {
+          key: "tokensymbol",
+          //hideInMobile: true
+        },
+        {
           key: "from",
           isLink: true,
           target: "address/detail",
@@ -468,15 +480,17 @@ export default {
 
           ///*
           const { txid, timestamp, datetime, token_type, from_address, to_address, block_number } = item;
-          const { token_symbol, amount_eth, token_amount, token_amount_eth } = item;
+          const { token_symbol, token_contract_address, amount_eth, token_amount, token_amount_eth } = item;
           let { value } = "";
           let disp_token_type = "";
+          let disp_token_symbol = token_symbol;
 
           console.log( "datetime = " + datetime );
           console.log( "timestamp = " + timestamp );
 
           if ( token_type == "ether" ) {
             disp_token_type = "Ether";
+            disp_token_symbol = "ETH";
             value = amount_eth + " " + token_symbol;
           }
           else if ( token_type == "erc20" ) {
@@ -525,7 +539,9 @@ export default {
                   //return ( <span>{ellipsisByLength(to_address, 6, true)}</span> );
               }
             },
-            value: value
+            value: value,
+            tokensymbol: disp_token_symbol,
+            tokencontract: token_contract_address,
           };
 
           res.from = from_address;
