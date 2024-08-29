@@ -25,7 +25,8 @@ const en = {
         "Symbol",
         "From",
         "To",
-        "Value"
+        "Value",
+        "Token Id",
       ],
       total: "Total of <i>{total}</i> Transactions",
       method: [
@@ -382,6 +383,8 @@ const en = {
         "Contract",
         "From",
         "To",
+        "Token Id",
+        "Token URI",
         "Value"
       ],
       paramTip: "Raw data in Base64",

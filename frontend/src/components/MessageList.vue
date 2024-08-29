@@ -393,6 +393,9 @@ export default {
         },
         {
           key: "value"
+        },
+        {
+          key: "token_id"
         }
       ],
 
@@ -624,7 +627,7 @@ export default {
           const { block_number, datetime, timestamp, token_amount, token_amount_eth } = item;
           const { token_amount_wei, token_contract_address, token_data } = item;
           const { token_data_length, token_decimals, token_symbol } = item;
-          const { token_total_supply, token_type, token_uri_ascii } = item;
+          const { token_total_supply, token_type, token_id_ascii, token_uri_ascii } = item;
           const { token_uri_hexadecimal, txid } = item;
           let { value } = "";
           let disp_token_type = "";
@@ -665,6 +668,7 @@ export default {
             console.log( "token_amount = " + token_amount );
             console.log( "token_data = " + token_data );
             console.log( "token_data_length = " + token_data_length );
+            console.log( "token_id_ascii = " + token_id_ascii );
             console.log( "token_url_ascii = " + token_uri_ascii );
             console.log( "token_uri_hexadecimal = " + token_uri_hexadecimal );
           }
@@ -707,6 +711,7 @@ export default {
               }
             },
             value: value,
+            token_id: token_id_ascii,
             tokensymbol: disp_token_symbol,
             tokencontract: token_contract_address,
             //value: this.formatFilNumber(value),

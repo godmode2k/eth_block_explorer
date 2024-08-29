@@ -492,6 +492,8 @@ func (t *LocalDB) _query(_type uint8, query_str string) []types.Fetch_transactio
             var Token_amount_wei string
             var Token_amount_eth string
             var Token_amount string
+            var Token_id_ascii string
+            var Token_id_hexadecimal string
             var Token_uri_ascii string
             var Token_uri_hexadecimal string
             var Token_data_length string
@@ -517,6 +519,8 @@ func (t *LocalDB) _query(_type uint8, query_str string) []types.Fetch_transactio
                 &Token_amount_wei,
                 &Token_amount_eth,
                 &Token_amount,
+                &Token_id_ascii,
+                &Token_id_hexadecimal,
                 &Token_uri_ascii,
                 &Token_uri_hexadecimal,
                 &Token_data_length,
@@ -547,6 +551,8 @@ func (t *LocalDB) _query(_type uint8, query_str string) []types.Fetch_transactio
                 Token_amount_wei: Token_amount_wei,
                 Token_amount_eth: Token_amount_eth,
                 Token_amount: Token_amount,
+                Token_id_ascii: Token_id_ascii,
+                Token_id_hexadecimal: Token_id_hexadecimal,
                 Token_uri_ascii: Token_uri_ascii,
                 Token_uri_hexadecimal: Token_uri_hexadecimal,
                 Token_data_length: Token_data_length,

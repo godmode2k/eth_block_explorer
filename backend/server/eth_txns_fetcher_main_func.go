@@ -325,11 +325,11 @@ func db_insert_txns(_type uint8, _data *types.Fetch_transactions_st) {
         TABLE_NAME = "txid"
         query_str = fmt.Sprintf(
             "INSERT INTO %s VALUES (0," +
-            "'%s', '%s', '%s'," +
+            "'%s', '%s', '%s', '%s'," +
             "'%s', '%s', '%s', '%s', '%s'," +
             "'%s', '%s', '%s', '%s', '%s'," +
             "'%s', '%s', '%s', '%s', '%s'," +
-            "'%s', '%s'" +
+            "'%s', '%s', '%s'" +
             ")",
 
             TABLE_NAME,
@@ -340,6 +340,7 @@ func db_insert_txns(_type uint8, _data *types.Fetch_transactions_st) {
             //_data.Is_send,
             _data.Amount_wei,
             _data.Amount_eth,
+
             _data.Token_type,
             _data.Token_symbol,
             _data.Token_decimals,
@@ -348,6 +349,8 @@ func db_insert_txns(_type uint8, _data *types.Fetch_transactions_st) {
             _data.Token_amount_wei,
             _data.Token_amount_eth,
             _data.Token_amount,
+            _data.Token_id_ascii,
+            _data.Token_id_hexadecimal,
             _data.Token_uri_ascii,
             _data.Token_uri_hexadecimal,
             _data.Token_data_length,
@@ -362,7 +365,8 @@ func db_insert_txns(_type uint8, _data *types.Fetch_transactions_st) {
             "UPDATE %s SET " +
             "from_address='%s', to_address='%s', ether_amount_wei='%s'," +
             "ether_amount_eth='%s', token_type='%s', token_symbol='%s', token_decimals='%s', token_total_supply='%s'," +
-            "token_contract_address='%s', token_amount_wei='%s', token_amount_eth='%s', erc1155_token_amount='%s', erc1155_token_uri_ascii='%s'," +
+            "token_contract_address='%s', token_amount_wei='%s', token_amount_eth='%s', erc1155_token_amount='%s'," +
+            "erc1155_token_id_ascii='%s', erc1155_token_id_hexadecimal='%s', erc1155_token_uri_ascii='%s'," +
             "erc1155_token_uri_hexadecimal='%s', erc1155_token_data_length='%s', erc1155_token_data='%s', timestamp='%s', datetime='%s'," +
             "blocks='%s', txid='%s'" +
             " WHERE txid='%s'" +
@@ -376,6 +380,7 @@ func db_insert_txns(_type uint8, _data *types.Fetch_transactions_st) {
             //_data.Is_send,
             _data.Amount_wei,
             _data.Amount_eth,
+
             _data.Token_type,
             _data.Token_symbol,
             _data.Token_decimals,
@@ -384,6 +389,8 @@ func db_insert_txns(_type uint8, _data *types.Fetch_transactions_st) {
             _data.Token_amount_wei,
             _data.Token_amount_eth,
             _data.Token_amount,
+            _data.Token_id_ascii,
+            _data.Token_id_hexadecimal,
             _data.Token_uri_ascii,
             _data.Token_uri_hexadecimal,
             _data.Token_data_length,
@@ -2524,9 +2531,9 @@ func get_blocks_all() {
         block_num_end_uint64, _ = strconv.ParseUint( block_num_end, 10, 64 )
 
 
-// test
-//if ( block_height_from_db_uint64 < 240 ) {
-//block_height_from_db_uint64 = 240
+// test: starting block at
+//if ( block_height_from_db_uint64 < 352 ) {
+//block_height_from_db_uint64 = 352
 //block_height_old_uint64 = block_height_from_db_uint64
 //}
 
@@ -3511,6 +3518,7 @@ func get_blocks_all_infinite(block_num_start_uint64 uint64, block_num_end_uint64
                 //tx_token_amount := ""
                 tx_token_id_hex := ""
                 //tx_token_id := ""
+                tx_token_id_ascii := ""
                 tx_token_data := ""
                 tx_token_data_length := ""
                 tx_token_uri_with_token_id := ""
@@ -3829,6 +3837,7 @@ func get_blocks_all_infinite(block_num_start_uint64 uint64, block_num_end_uint64
                         token_id_int := new(big.Int)
                         token_id_int.SetString( tx_token_id_hex[2:], 16 )
                         tx_token_id := token_id_int.String()
+                        tx_token_id_ascii = tx_token_id
 
                         // get URI
                         {
@@ -3886,7 +3895,7 @@ func get_blocks_all_infinite(block_num_start_uint64 uint64, block_num_end_uint64
                             //fmt.Println( "checks len: ", checks_len )
 
                             if len(uri_hex_str) <= checks_len {
-                		fmt.Println( "uri_hex_str = ", uri_hex_str )
+                                fmt.Println( "uri_hex_str = ", uri_hex_str )
                                 log.Fatal( "invalid length: ", len(uri_hex_str) )
                             }
 
@@ -4008,7 +4017,8 @@ func get_blocks_all_infinite(block_num_start_uint64 uint64, block_num_end_uint64
                     fmt.Println( "token_contract address =", tx_to )
                     fmt.Println( "token_from =", tx_token_from )
                     fmt.Println( "token_to =", tx_token_to )
-                    fmt.Println( "token_id = ", tx_token_id_hex )
+                    fmt.Println( "token_id (ASCII) = ", tx_token_id_ascii )
+                    fmt.Println( "token_id (Hexadecimal) = ", tx_token_id_hex )
                     fmt.Println( "token_amount = ", tx_token_amount )
                     fmt.Println( "token_uri (ASCII) = ", tx_token_uri_with_token_id )
                     fmt.Println( "token_uri (Hexadecimal) = ", tx_token_uri_with_token_id_hexadecimal )
@@ -4042,6 +4052,8 @@ func get_blocks_all_infinite(block_num_start_uint64 uint64, block_num_end_uint64
 
                         // for SQL: ERC-1155
                         Token_amount: tx_token_amount,
+                        Token_id_ascii: tx_token_id_ascii,
+                        Token_id_hexadecimal: tx_token_id_hex,
                         Token_uri_ascii: tx_token_uri_with_token_id,
                         Token_uri_hexadecimal: tx_token_uri_with_token_id_hexadecimal,
                         Token_data_length: tx_token_data_length,

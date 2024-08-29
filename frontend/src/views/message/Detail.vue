@@ -249,6 +249,14 @@ export default {
           paramKey: "address"
         },
         {
+          key: "token_id",
+        },
+        {
+          key: "token_uri",
+          isLink: true,
+          ellipsis: true,
+        },
+        {
           key: "value",
           //unit: "FIL"
         },
@@ -343,6 +351,14 @@ export default {
         type: String,
         default: ""
     },
+    token_id: {
+        type: String,
+        default: ""
+    },
+    token_uri: {
+        type: String,
+        default: ""
+    },
     value: {
         type: String,
         default: ""
@@ -396,7 +412,7 @@ export default {
                 const { block_number, datetime, timestamp, token_amount, token_amount_eth } = item;
                 const { token_amount_wei, token_contract_address, token_data } = item;
                 const { token_data_length, token_decimals, token_symbol } = item;
-                const { token_total_supply, token_type, token_uri_ascii } = item;
+                const { token_total_supply, token_type, token_id_ascii, token_uri_ascii } = item;
                 const { token_uri_hexadecimal, txid } = item;
                 let { value } = "";
                 let disp_token_type = "";
@@ -436,6 +452,7 @@ export default {
                     console.log( "token_contract_address = " + token_contract_address );
                     console.log( "token_data = " + token_data );
                     console.log( "token_data_length = " + token_data_length );
+                    console.log( "token_id_ascii = #" + token_id_ascii );
                     console.log( "token_url_ascii = " + token_uri_ascii );
                     console.log( "token_uri_hexadecimal = " + token_uri_hexadecimal );
                 }
@@ -495,6 +512,8 @@ export default {
                       //return ( <span>{ellipsisByLength(to_address, 6, true)}</span> );
                   }
                 },
+                token_id: token_id_ascii,
+                token_uri: token_uri_ascii,
                 value: value,
                 //value: this.formatFilNumber(value),
                 //fee: gasprice,

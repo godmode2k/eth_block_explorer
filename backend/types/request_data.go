@@ -127,6 +127,8 @@ type Fetch_transactions_st struct {
 
     // Token: ERC-1155 (NFT, FT)
     Token_amount string `json:"token_amount"`
+    Token_id_ascii string `json:"token_id_ascii"`
+    Token_id_hexadecimal string `json:"token_id_hexadecimal"`
     Token_uri_ascii string `json:"token_uri_ascii"`
     Token_uri_hexadecimal string `json:"token_uri_hexadecimal"`
     Token_data_length string `json:"token_data_length"`
