@@ -25,7 +25,8 @@ Environment
 Backend
 ----------
 > HTTP RPC Server: </br>
-> Fetcher Service: Supports ETH, ERC-20, ERC-1155 (NFT)
+> Fetcher Service: Supports ETH, ERC-20, ERC-1155 (NFT) </br>
+> NFT Metadata APIs
 
 
 Frontend
@@ -118,6 +119,13 @@ $ go get github.com/mattn/go-sqlite3
 4. Database
 $ mysql -u root -p < mysql.sql
 
+5. NFT Metadata APIs: nft_meta_apis/nft_meta_api_golang/nft_meta_apis_main.go
+(Edit)
+ - var CERT = "/etc/ssl/example.com+4.pem"
+ - var CERT_KEY = "/etc/ssl/example.com+4-key.pem"
+ - //var HOST = ":443" // https
+ - var HOST = ":8888" // http
+
 
 
 ---------------------------------
@@ -161,6 +169,39 @@ $ npm run serve
 
 (Web Browser)
 http://127.0.0.1:4396
+
+
+// Backend: NFT Meta APIs {
+$ cd nft_meta_apis/nft_meta_api_golang
+$ sh run_ntf_meta_apis.sh
+
+(resource path)
+nft_meta_apis/nft_meta_api_golang/assets/resources/
+
+Directory:    <NFT-Name>/: nft1/
+Metadata :    <NFT-Name>_<id>_meta.json: nft1_0_meta.json
+Image    :    <NFT-Name>_<id>.jpg: nft1_0.jpg
+
+nft1/nft1_0_meta.json
+nft1/nft1_0.jpg
+
+
+(metadata)
+$ curl http://172.17.0.2:8888/apis/tokens/nft1/0
+$ curl http://172.17.0.2:8888/apis/tokens/nft1/1
+{
+  "description": "Test NFT1 #1 image: warty-final-ubuntu", 
+  "external_url": "http://172.17.0.2:8888/apis/tokens/nft1/1", 
+  "image": "http://172.17.0.2:8888/resources/tokens/nft1/1", 
+  "name": "Test NFT1 #1",
+  "attributes": []
+}
+
+
+(image)
+$ wget http://172.17.0.2:8888/resources/tokens/nft1/0
+$ wget http://172.17.0.2:8888/resources/tokens/nft1/1
+// Backend: NFT Meta APIs }
 
 
 

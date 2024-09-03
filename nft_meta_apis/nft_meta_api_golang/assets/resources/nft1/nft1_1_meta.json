@@ -1,0 +1,7 @@
+{
+  "description": "Test NFT1 #1 image: warty-final-ubuntu", 
+  "external_url": "http://172.17.0.2:8888/apis/tokens/nft1/1", 
+  "image": "http://172.17.0.2:8888/resources/tokens/nft1/1", 
+  "name": "Test NFT1 #1",
+  "attributes": []
+}

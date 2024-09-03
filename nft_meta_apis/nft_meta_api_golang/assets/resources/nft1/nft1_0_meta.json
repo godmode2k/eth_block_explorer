@@ -1,0 +1,7 @@
+{
+  "description": "Test NFT1 #0 image: ubuntu-numpy-numbat-on-dell-xps-13.jpg", 
+  "external_url": "http://172.17.0.2:8888/apis/tokens/nft1/0", 
+  "image": "http://172.17.0.2:8888/resources/tokens/nft1/0", 
+  "name": "Test NFT1 #0",
+  "attributes": []
+}
