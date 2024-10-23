@@ -277,5 +277,11 @@ Screenshots
 ----------
 
 > Ethereum Block Explorer </br>
-<img src="https://github.com/godmode2k/eth_block_explorer/raw/main/screenshot.png" width="50%" height="50%">
+<img src="https://github.com/godmode2k/eth_block_explorer/raw/main/screenshots/screenshot.png" width="50%" height="50%">
+<br>
+<img src="https://github.com/godmode2k/eth_block_explorer/raw/main/screenshots/screenshot_1.jpg" width="50%" height="50%">
+<br>
+<img src="https://github.com/godmode2k/eth_block_explorer/raw/main/screenshots/screenshot_2.jpg" width="50%" height="50%">
+<br>
+<img src="https://github.com/godmode2k/eth_block_explorer/raw/main/screenshots/screenshot_3.jpg" width="50%" height="50%">
 
